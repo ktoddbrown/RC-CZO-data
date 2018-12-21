@@ -1,0 +1,13 @@
+Package: RC-CZO-data
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Author: K Todd-Brown <ktoddbrown@gmail.com>
+Maintainer: K Todd-Brown <ktoddbrown@gmail.com>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr

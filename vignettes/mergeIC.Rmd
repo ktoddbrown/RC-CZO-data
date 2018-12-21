@@ -1,0 +1,136 @@
+---
+title: "Merge IC cores"
+author: "K Todd-Brown"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup}
+library(readxl)
+library(tidyverse)
+
+ICData <- '~/Documents/Professional/Datasets/Renyolds-CZO/data/Reynolds_data (1).xlsx'
+```
+
+# Read in data
+```{r setReads}
+readxl::excel_sheets(ICData)
+
+readRanges <- list(DH1=list(sheet_name='DH1', site_name='A1:B1', 
+                            dates='D1:E1', site='A3:G4', bulk_density='I19',
+                            pit_description='A7:E15',
+                            fine_fraction='A20:G50',
+                            gravel_fraction='A53:D83'),
+                   WH1=list(sheet_name='WH1',
+                            site_name='A2:B2', dates='E2:F2', site='A4:G5', bulk_density='E17',
+                            pit_description='A8:G13',
+                            gravel_fraction='A18:E29'),
+                   DRY1=list(sheet_name='DRY1',
+                             site_name='A1:B1', dates='D1:E1', 
+                             site='A3:G4',
+                             bulk_density='E13',
+                             pit_description='A7:G11',
+                             fine_fraction='A14:E44',
+                             gravel_fraction='A47:B77')
+)
+
+allTableNames <- unique(unlist(lapply(readRanges, names)))
+# readRanges1 <- list(sheet_name=c('DH1', 'WH1'),
+#                     site_name=list(DH1='A1:B1', WH1='A2:B2'),
+#                     dates=list(DH1='D1:E1', WH1='E2:F2'),
+#                     bulk_density=list(DH1='I19', WH1='E17'),
+#                     site=list(DH1='A3:G4', WH1= 'A4:G5'),
+#               pit_description=list(DH1='A7:E15', WH1='A8:G13'),
+#               fine_fraction=list(DH1='A20:G50', WH1=NA),
+#               gravel_fraction=list(DH1='A53:D83', WH1='A18:E29'))
+```
+
+```{r readData}
+rawData <- plyr::llply(readRanges, function(xx){
+  plyr::llply(xx[-1], 
+              function(yy){
+                readxl::read_excel(ICData, sheet=xx$sheet_name, 
+                                   range=unlist(yy), col_types = 'text') %>%
+                  dplyr::mutate(sheet=xx$sheet_name)})
+})
+
+longNames <- c('site_name', 'dates', 'bulk_density')
+longTables <- plyr::llply(setNames(longNames, longNames), function(xx){
+  plyr::ldply(rawData, function(yy){names(yy[[xx]])}, .id='core') #pull long table info
+})
+
+tableNames <- setdiff(allTableNames, c('sheet_name', longNames))
+wideTables <- plyr::llply(setNames(tableNames, tableNames), function(xx){
+  plyr::ldply(rawData, function(yy){yy[[xx]]}, .id='core') #pull wide table info
+})
+```
+
+# Clean up data
+```{r cleanSiteName}
+cleanNames <- longTables$site_name %>% select(core, V2) %>% dplyr::rename(site_name = V2) 
+cleanBD <- longTables$bulk_density %>% select(core, V1) %>% dplyr::rename(bulk_density = V1)
+cleanDates <- longTables$dates %>% select(core, V2) %>% dplyr::rename(sample_date = V2)
+cleanSite <- wideTables$site %>% select(-sheet)
+
+site.df <- full_join(cleanNames, cleanBD, by='core') %>%
+  full_join(cleanDates, by='core') %>%
+  full_join(cleanSite, by='core')
+
+print(site.df)
+```
+
+```{r cleanHz}
+pit.df <- wideTables$pit_description %>%
+  mutate(Effervesence = if_else(is.na(Effervesence), Eff, Effervesence)) %>%
+  select(-Eff, -sheet)
+
+print(pit.df)
+```
+
+```{r cleanMass}
+mass.df <- wideTables$fine_fraction %>%
+  select(core, ID, `Soil mass(g)`, `Gravel mass(g)`) %>%
+  bind_rows(wideTables$gravel_fraction %>%
+              select(core, ID, `Soil mass(g)`, `Gravel mass(g)`)) %>%
+  filter(!is.na(`Soil mass(g)`)) %>%
+  tidyr::separate(ID, c('sample ID', 'col2', 'col3'), sep='_') %>%
+  mutate('Depth' = if_else(is.na(col3), as.numeric(col2), as.numeric(col3))) %>%
+  select(core, Depth, `sample ID`, `Soil mass(g)`, `Gravel mass(g)`) %>%
+  mutate_at(c('Depth', 'Soil mass(g)', 'Gravel mass(g)'), as.numeric)
+
+print(mass.df)
+```
+
+```{r cleanIC}
+inorganicC.df <- wideTables$fine_fraction %>%
+  select(core, ID, `% IC`) %>% mutate(fraction='fine') %>%
+  bind_rows(wideTables$gravel_fraction %>%
+              select(core, ID, `% IC`) %>% mutate(fraction='gravel')) %>%
+  mutate(`% IC` = as.numeric(gsub('tr', '0.0001', `% IC`))) %>%
+  tidyr::separate(ID, c('sample ID', 'col2', 'col3'), sep='_') %>%
+  mutate('Depth' = if_else(is.na(col3), as.numeric(col2), as.numeric(col3))) %>%
+  select(core, `sample ID`, Depth, fraction, `% IC`) %>%
+  mutate_at(c('Depth', '% IC'), as.numeric)
+
+print(inorganicC.df)
+```
+ 
+ # QA/QC
+ 
+```{r basicVis}
+ggplot(mass.df) +
+  geom_line(aes(x=-Depth, y=`Soil mass(g)`, group=`sample ID`)) +
+  geom_line(aes(x=-Depth, y=`Gravel mass(g)`, group=`sample ID`), color='red') +
+  coord_flip()
+
+ggplot(mass.df) +
+  geom_line(aes(x=-Depth, y=`Gravel mass(g)`/`Soil mass(g)`, group=`sample ID`)) +
+  coord_flip()
+
+ggplot(inorganicC.df) +
+  geom_histogram(aes(x=`% IC`, fill=fraction))
+```
