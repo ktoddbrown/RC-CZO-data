@@ -18,7 +18,7 @@ ICData <- '~/Documents/Professional/Datasets/Renyolds-CZO/data/Reynolds_data (1)
 
 # Read in data
 ```{r setReads}
-readxl::excel_sheets(ICData)
+
 
 readRanges <- list(DH1=list(sheet_name='DH1', site_name='A1:B1', 
                             dates='D1:E1', site='A3:G4', bulk_density='I19',
@@ -35,8 +35,379 @@ readRanges <- list(DH1=list(sheet_name='DH1', site_name='A1:B1',
                              bulk_density='E13',
                              pit_description='A7:G11',
                              fine_fraction='A14:E44',
-                             gravel_fraction='A47:B77')
+                             gravel_fraction='A47:B77'),
+                   OTH1=list(sheet_name='OTH1',
+                             site_name='A1:B1', dates='D1:E1', 
+                             site='A3:G4',
+                             #bulk_density='E13',
+                             pit_description='A7:G11'),
+                             #fine_fraction='A14:E44',
+                             #gravel_fraction='A47:B77')
+                   Jun1=list(sheet_name='Jun1',
+                             site_name='A1:B1', dates='D1:E1', 
+                             site='A3:G4',
+                             #bulk_density='E13',
+                             pit_description='A7:D11'),
+                             #fine_fraction='A14:E44',
+                             #gravel_fraction='A47:B77')
+                   PAR1=list(sheet_name='PAR1',
+                             site_name='A1:B1', 
+                             dates_PAR1='H1:I2', #Specal formatting
+                             site_PAR1='A2:F3', #Specal formatting
+                             bulk_density='F13',
+                             pit_description='A5:J11',
+                             fine_fraction='A14:F47',
+                             gravel_fraction='A91:E124'),
+                   Flat1=list(sheet_name='Flat1',
+                             site_name='A1:B1', 
+                             dates_Flat1='E1:F2', #Specal formatting
+                             site_Flat1='A2:G4', #Specal formatting
+                             pit_description='A7:I11',
+                             bulk_density='E15',
+                             fine_fraction='A16:D35',
+                             gravel_fraction='A41:L60'),
+                   Off1=list(sheet_name='Off1',
+                             site_name='A1:B1', 
+                             dates_Off1='E1:G1', #Specal formatting
+                             site='A3:G4',
+                             pit_description='A8:J12',
+                             bulk_density='E16',
+                             fine_fraction='A17:F44',
+                             gravel_fraction='A51:D77'),
+                   Hoot1=list(sheet_name='Hoot1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:I12',
+                             bulk_density='E15',
+                             fine_fraction='A16:F49',
+                             gravel_fraction='A52:D85'),
+                   Hoot2=list(sheet_name='Hoot2',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:I12',
+                             bulk_density='E15',
+                             fine_fraction='A16:F49',
+                             gravel_fraction='A52:B85'),
+                   Off2=list(sheet_name='Off2',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:I11',
+                             bulk_density='E15',
+                             fine_fraction='A16:F46',
+                             gravel_fraction='A50:D81'),
+                   LWS1=list(sheet_name='LWS1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:I13',
+                             bulk_density='E16',
+                             fine_fraction='A17:F47',
+                             gravel_fraction='A50:B80'),
+                   NG1=list(sheet_name='NG1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:I13',
+                             bulk_density='F15',
+                             fine_fraction='A16:F43', #TODO check mislabled table
+                             gravel_fraction='A49:D76'),
+                   Gate1=list(sheet_name='Gate1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J13',
+                             bulk_density='E16',
+                             fine_fraction='A17:F24',
+                             gravel_fraction='A29:B36'),
+                   FRE1=list(sheet_name='FRE1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J13',
+                             bulk_density='E15',
+                             fine_fraction='A16:F43',
+                             gravel_fraction='A48:B75'),
+                   RDC1=list(sheet_name='RDC1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J12'),#,
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   RDC2=list(sheet_name='RDC2',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J12'),#,
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   RDC3=list(sheet_name='RDC3',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J12'),#,
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   RDH1=list(sheet_name='RDH1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J11'),#,
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   RDH2=list(sheet_name='RDH2',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J9'),#,
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   Chan1=list(sheet_name='Chan1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J11'),#,
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   WHR1=list(sheet_name='WHR1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J12'),#,
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   WHR2=list(sheet_name='WHR2',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J12'),#,
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   WHR3=list(sheet_name='WHR3',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J11'),#,
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   WHR4=list(sheet_name='WHR4',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J11'),#,
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   WHR5=list(sheet_name='WHR5',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4'),
+                             #pit_description='A8:J11', #not recorded
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   WHR6=list(sheet_name='WHR6',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4'),
+                             #pit_description='A8:J11', #not recorded
+                             #bulk_density='E16', # not recorded
+                             #fine_fraction='A17:F47', #not recorded
+                             #gravel_fraction='A50:B80') #not recorded
+                   FLAT2=list(sheet_name='FLAT2',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J9',
+                             bulk_density='E13',
+                             fine_fraction='A14:E19',
+                             gravel_fraction='A23:D28'),
+                   QST1=list(sheet_name='QST1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J14',
+                             bulk_density='H19',
+                             fine_fraction='A20:F58',
+                             gravel_fraction='A62:B100'),
+                   QST2=list(sheet_name='QST2',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J15',
+                             bulk_density='F18',
+                             fine_fraction='A19:F32',
+                             gravel_fraction='A35:D48'),
+                   SCJ1=list(sheet_name='SCJ1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J16',
+                             bulk_density='E19',
+                             fine_fraction='A20:F48',
+                             gravel_fraction='A53:B81'),
+                   RR1=list(sheet_name='RR1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J15',
+                             bulk_density='E17',
+                             fine_fraction='A18:F32',
+                             gravel_fraction='A37:B51'),
+                   SRB1=list(sheet_name='SRB1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J14',
+                             bulk_density='E18',
+                             fine_fraction='A19:F34',
+                             gravel_fraction='A37:B52'),
+                   DHA1=list(sheet_name='DHA1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J16',
+                             bulk_density='G19',
+                             fine_fraction='A20:F38',
+                             gravel_fraction='A41:B59'),
+                   WT1=list(sheet_name='WT1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J13',
+                             bulk_density='E16',
+                             fine_fraction='A17:F26',
+                             gravel_fraction='A29:B38'),
+                   RR2=list(sheet_name='RR2',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J13',
+                             bulk_density='E16',
+                             fine_fraction='A17:F29',
+                             gravel_fraction='A33:B45'),
+                   MDR1=list(sheet_name='MDR1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J11',
+                             bulk_density='E14',
+                             fine_fraction='A15:F25',
+                             gravel_fraction='A28:B28'),
+                   CB1=list(sheet_name='CB1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J13',
+                             bulk_density='E16',
+                             fine_fraction='A17:F27',
+                             gravel_fraction='A31:B41'),
+                   WCA1=list(sheet_name='WCA1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J9'),
+                             #bulk_density='E19', #not recorded
+                             #fine_fraction='A20:F48', #not recorded
+                             #gravel_fraction='A53:B81') #not recorded
+                   FTR1=list(sheet_name='FTR1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J13',
+                             bulk_density='E16',
+                             fine_fraction='A17:F30',
+                             gravel_fraction='A34:B47'),
+                    MDR2=list(sheet_name='MDR2',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J14',
+                             bulk_density='E17',
+                             fine_fraction='A18:F32',
+                             gravel_fraction='A36:B50'),
+                    TG1=list(sheet_name='TG1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J9'),
+                             #bulk_density='E16', #not recorded
+                             #fine_fraction='A17:F30', #not recorded
+                             #gravel_fraction='A34:B47'), #not recorded
+                   WTH1=list(sheet_name='WTH1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J9'),
+                             #bulk_density='E16', #not recorded
+                             #fine_fraction='A17:F30', #not recorded
+                             #gravel_fraction='A34:B47'), #not recorded
+                   MCR1=list(sheet_name='MCR1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J9'),
+                             #bulk_density='E16', #not recorded
+                             #fine_fraction='A17:F30', #not recorded
+                             #gravel_fraction='A34:B47'), #not recorded
+                   MC1=list(sheet_name='MC1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J9'),
+                             #bulk_density='E16', #not recorded
+                             #fine_fraction='A17:F30', #not recorded
+                             #gravel_fraction='A34:B47'), #not recorded
+                   TG2=list(sheet_name='TG2',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J11'),
+                             #bulk_density='E16', #not recorded
+                             #fine_fraction='A17:F30', #not recorded
+                             #gravel_fraction='A34:B47'), #not recorded
+                   TG3=list(sheet_name='TG3',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4'),
+                             #pit_description='A8:J9'), TODO not recorded in format
+                             #bulk_density='E16', #not recorded
+                             #fine_fraction='A17:F30', #not recorded
+                             #gravel_fraction='A34:B47'), #not recorded
+                   WHU1=list(sheet_name='WHU1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J11'),
+                             #bulk_density='E16', #not recorded
+                             #fine_fraction='A17:F30', #not recorded
+                             #gravel_fraction='A34:B47'), #not recorded
+                   OWL1=list(sheet_name='OWL1',
+                             site_name='A1:B1', 
+                             dates='E1:F1',
+                             site='A3:G4',
+                             pit_description='A8:J13',
+                             bulk_density='D20',
+                             fine_fraction='A22:E26')
+                             #gravel_fraction='A34:B47'), #not recorded
 )
+
+print(paste('Bad names:', paste(setdiff(names(readRanges), readxl::excel_sheets(ICData)), collapse=', ')))
+print(paste('Sheets left out: [', length(setdiff(readxl::excel_sheets(ICData), names(readRanges))),']',  
+            paste(setdiff(readxl::excel_sheets(ICData), names(readRanges)), collapse=', ')))
+print(paste('Sheets done: [', length(names(readRanges)), ']'))
 
 allTableNames <- unique(unlist(lapply(readRanges, names)))
 # readRanges1 <- list(sheet_name=c('DH1', 'WH1'),
@@ -60,7 +431,11 @@ rawData <- plyr::llply(readRanges, function(xx){
 
 longNames <- c('site_name', 'dates', 'bulk_density')
 longTables <- plyr::llply(setNames(longNames, longNames), function(xx){
-  plyr::ldply(rawData, function(yy){names(yy[[xx]])}, .id='core') #pull long table info
+  #print(xx)
+  return(plyr::ldply(rawData, function(yy){
+    #print(paste(yy$site_name, names(yy[[xx]])))
+    return(names(yy[[xx]]))
+    }, .id='core')) #pull long table info
 })
 
 tableNames <- setdiff(allTableNames, c('sheet_name', longNames))
