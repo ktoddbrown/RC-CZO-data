@@ -504,9 +504,9 @@ site.df
 ```{r cleanPit}
 pit.df <- wideTables$pit_description %>%
   mutate(Effervesence = if_else(is.na(Effervesence), Eff, Effervesence),
-         Depth_cm = case_when(!is.na(Depth) ~ Depth,
-                              !is.na(`Depth (cm)`) ~ `Depth (cm)`,
-                              !is.na(`Pit Description`) ~ `Pit Description`,
+         Depth_cm = case_when(!is.na(Depth) ~ paste0("'", Depth),
+                              !is.na(`Depth (cm)`) ~ paste0("'", `Depth (cm)`),
+                              !is.na(`Pit Description`) ~ paste0("'", `Pit Description`),
                               TRUE ~ as.character(NA)),
          Structure = case_when(!is.na(Structure) ~ Structure,
                                !is.na(Structure__1) ~ Structure__1,
@@ -515,9 +515,10 @@ pit.df <- wideTables$pit_description %>%
                              !is.na(Text) ~ Text,
                              TRUE ~ as.character(NA))) %>%
   rename('Gravel_percent' = 'Gravel(%)') %>%
-  select(core, Depth_cm, Roots, Effervesence, Texture, Color, Structure, Horizon, Bound, Gravel_percent, Notes)
+  select(core, Depth_cm, Roots, Effervesence, Texture, 
+         Color, Structure, Horizon, Bound, Gravel_percent, Notes)
 
-print(pit.df)
+#print(pit.df)
 ```
 
 ```{r cleanMass}
@@ -576,10 +577,10 @@ inorgnicC.df <- temp %>%
 ```
  
 ```{r writeNewWS}
-write_excel_csv(site.df, file.path('..', 'temp', 'Reynolds_data_site.csv'))
-write_excel_csv(pit.df, file.path('..', 'temp', 'Reynolds_data_pit.csv'))
-write_excel_csv(mass.df, file.path('..', 'temp', 'Reynolds_data_mass.csv'))
-write_excel_csv(inorgnicC.df, file.path('..', 'temp', 'Reynolds_data_inorganicC.csv'))
+write_excel_csv(site.df, file.path('..', 'temp', 'Reynolds_data', 'site.csv'))
+write_excel_csv(pit.df, file.path('..', 'temp', 'Reynolds_data', 'pit.csv'))
+write_excel_csv(mass.df, file.path('..', 'temp', 'Reynolds_data', 'mass.csv'))
+write_excel_csv(inorgnicC.df, file.path('..', 'temp', 'Reynolds_data', 'inorganicC.csv'))
 ```
 
 # QA/QC
@@ -608,7 +609,8 @@ ggplot(site.df) +
 
 
 soil.df <- inorgnicC.df %>%
-  mutate(ID_fraction = if_else(ID_fraction %in% c('G', 'GRAVEL'), 'Gravel_IC_percent', 'Fine_IC_percent')) %>%
+  mutate(ID_fraction = if_else(ID_fraction %in% c('G', 'GRAVEL'),
+                               'Gravel_IC_percent', 'Fine_IC_percent')) %>%
   spread(key=ID_fraction, value=IC_percent) %>%
   full_join(mass.df) %>%
   mutate_at(vars(-core, -ID_sample), as.numeric) %>%
@@ -621,7 +623,7 @@ soil.df <- inorgnicC.df %>%
                                        TRUE ~ Fine_IC_percent))
   
   
-write_excel_csv(soil.df, file.path('..', 'temp', 'Reynolds_data_filled_massIC.csv'))
+write_excel_csv(soil.df, file.path('..', 'temp', 'Reynolds_data', 'filled_massIC.csv'))
 ```
 ```{r}
 plot.df <- soil.df %>%
