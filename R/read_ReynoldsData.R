@@ -5,10 +5,9 @@
 #' @param dataDir string indentifying the data directory
 #' @param verbose boolean flag for verbose outputs
 #'
-#' @return
+#' @return list of data tables including: site, pit, mass, and inorganic carbon data
 #' @export
 #'
-#' @examples
 read_ReynoldsData <- function(dataDir = '~/Documents/Professional/Datasets/Renyolds-CZO/data',
                               verbose=TRUE){
   
