@@ -14,6 +14,7 @@ library(readxl)
 library(tidyverse)
 
 source('../R/read_ReynoldsData.R')
+source('../R/read_SiteTextureData.R')
 
 dataDir <- '~/Documents/Professional/Datasets/Renyolds-CZO/data'
 ```
@@ -26,13 +27,39 @@ site.df <- ICReads$site
 pit.df <- ICReads$pit
 mass.df <- ICReads$mass
 inorganicC.df <- ICReads$inorganicC
+
+
+texture.df <- read_SiteTextureData(dataDir=dataDir) %>%
+  mutate(`Sand (g)` = `Ashed Mass (g)`,
+         `Clay (g)` = `Hydro Reading` - `Blank Reading`,
+         `Total (by oven) (g)` = `Mass Dried (g)` - 
+           (`Wet Sieved + Oven dry mass (g)` - `Ashed Mass (g)`) ) %>%
+  mutate(`Silt (g)` = `Total (by oven) (g)` - `Clay (g)` - `Sand (g)`) %>%
+  mutate(core = if_else(grepl('[RLC]$', sheet_name),
+                        substr(sheet_name, 1, nchar(sheet_name)-1),
+                        sheet_name),
+         ID_sample = if_else(grepl('[RLC]$', sheet_name),
+                        substr(sheet_name, nchar(sheet_name), nchar(sheet_name)),
+                        '')) %>%
+  mutate(core = recode(core, 'Dry1'='DRY1', 'Off1' = 'OFF1', 'Off2'='OFF2')) %>%
+  separate(`Depth (cm)`, into=c('Depth top (cm)', 'ID_Depth_cm'), sep='-', remove=FALSE) %>%
+  mutate(`Depth (cm)`=paste0("'",`Depth (cm)`)) %>%
+  mutate(source_file = 'Site_textue (1).xlsx') %>%
+  select(source_file, sheet_name, core, `Depth (cm)`, ID_Depth_cm, ID_sample,
+         `Blank Reading`, `Hydro Reading`, `Temperature (C)`, 
+         `Mass Dried (g)`, `Wet Sieved + Oven dry mass (g)`, `Ashed Mass (g)`,
+         `Total (by oven) (g)`, `Sand (g)`, `Clay (g)`, `Silt (g)`)
+
+##TODO core names don't match between mass.df and texture.df
 ```
  
 ```{r writeNewWS}
 write_excel_csv(site.df, file.path('..', 'temp', 'Reynolds_data', 'site.csv'))
 write_excel_csv(pit.df, file.path('..', 'temp', 'Reynolds_data', 'pit.csv'))
 write_excel_csv(mass.df, file.path('..', 'temp', 'Reynolds_data', 'mass.csv'))
-write_excel_csv(inorgnicC.df, file.path('..', 'temp', 'Reynolds_data', 'inorganicC.csv'))
+write_excel_csv(inorganicC.df, file.path('..', 'temp', 'Reynolds_data', 'inorganicC.csv'))
+
+write_excel_csv(texture.df, file.path('..', 'temp', 'Site_texture', 'texture.csv'))
 ```
 
 # QA/QC
