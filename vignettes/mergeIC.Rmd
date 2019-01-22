@@ -41,7 +41,8 @@ texture.df <- read_SiteTextureData(dataDir=dataDir) %>%
          ID_sample = if_else(grepl('[RLC]$', sheet_name),
                         substr(sheet_name, nchar(sheet_name), nchar(sheet_name)),
                         '')) %>%
-  mutate(core = recode(core, 'Dry1'='DRY1', 'Off1' = 'OFF1', 'Off2'='OFF2')) %>%
+  mutate(core = recode(core, 'Dry1'='DRY1',  'OFF1' = 'Off1', 'OFF2'='Off2',
+                       'DHI'='DH1', 'WHI'='WH1', 'SRB'='SRB1', 'LWS'='LWS1')) %>%
   separate(`Depth (cm)`, into=c('Depth top (cm)', 'ID_Depth_cm'), sep='-', remove=FALSE) %>%
   mutate(`Depth (cm)`=paste0("'",`Depth (cm)`)) %>%
   mutate(source_file = 'Site_textue (1).xlsx') %>%
@@ -49,8 +50,8 @@ texture.df <- read_SiteTextureData(dataDir=dataDir) %>%
          `Blank Reading`, `Hydro Reading`, `Temperature (C)`, 
          `Mass Dried (g)`, `Wet Sieved + Oven dry mass (g)`, `Ashed Mass (g)`,
          `Total (by oven) (g)`, `Sand (g)`, `Clay (g)`, `Silt (g)`)
+##'Site 3' is currently orphaned.... need to go back to field notebook
 
-##TODO core names don't match between mass.df and texture.df
 ```
  
 ```{r writeNewWS}
