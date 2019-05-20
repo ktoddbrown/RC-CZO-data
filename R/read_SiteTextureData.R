@@ -33,7 +33,27 @@ read_SiteTextureData <- function(dataDir = '~/Documents/Professional/Datasets/Re
     mutate_at(vars(contains('(g)'), contains("Reading")), as.numeric) %>%
     rename(`Wet Sieved + Oven dry mass (g)` = 'Sand Mass (g)', 
            `Temperature (C)` = `Temp ©`) %>%
-    mutate(`Depth (cm)` = gsub(' ', '', `Depth (cm)`)) #Strip the spaces
+    mutate(`Depth (cm)` = gsub(' ', '', `Depth (cm)`))%>% #Strip the spaces
+  mutate(`Sand (g)` = `Ashed Mass (g)`,
+         `Clay (g)` = `Hydro Reading` - `Blank Reading`,
+         `Total (by oven) (g)` = `Mass Dried (g)` - 
+           (`Wet Sieved + Oven dry mass (g)` - `Ashed Mass (g)`) ) %>%
+  mutate(`Silt (g)` = `Total (by oven) (g)` - `Clay (g)` - `Sand (g)`) %>%
+  mutate(core = if_else(grepl('[RLC]$', sheet_name),
+                        substr(sheet_name, 1, nchar(sheet_name)-1),
+                        sheet_name),
+         ID_sample = if_else(grepl('[RLC]$', sheet_name),
+                        substr(sheet_name, nchar(sheet_name), nchar(sheet_name)),
+                        '')) %>%
+  mutate(core = recode(core, 'Dry1'='DRY1',  'OFF1' = 'Off1', 'OFF2'='Off2',
+                       'DHI'='DH1', 'WHI'='WH1', 'SRB'='SRB1', 'LWS'='LWS1')) %>%
+  separate(`Depth (cm)`, into=c('Depth top (cm)', 'ID_Depth_cm'), sep='-', remove=FALSE) %>%
+  mutate(`Depth (cm)`=paste0("'",`Depth (cm)`)) %>%
+  mutate(source_file = 'Site_textue (1).xlsx') %>%
+  select(source_file, sheet_name, core, `Depth (cm)`, ID_Depth_cm, ID_sample,
+         `Blank Reading`, `Hydro Reading`, `Temperature (C)`, 
+         `Mass Dried (g)`, `Wet Sieved + Oven dry mass (g)`, `Ashed Mass (g)`,
+         `Total (by oven) (g)`, `Sand (g)`, `Clay (g)`, `Silt (g)`)
     
   return(texture.df)
   
