@@ -15,57 +15,199 @@ library(tidyverse)
 
 source('../R/read_ReynoldsData.R')
 source('../R/read_SiteTextureData.R')
+source('../R/read_PattonData.R')
+source('../R/read_RyanData.R')
 
 dataDir <- '~/Documents/Professional/Datasets/Renyolds-CZO/data'
 ```
+# Check with Kitty Lohse
 
-# Read in data
-```{r setReads}
-ICReads <- read_ReynoldsData(dataDir=dataDir)
+1) Do the texture derivations match well?
 
-site.df <- ICReads$site
-pit.df <- ICReads$pit
-mass.df <- ICReads$mass
-inorganicC.df <- ICReads$inorganicC
+2) Is there a raster map of the site for the lat/lon plots?
 
+3) Add collector/field notebook/collection date and other metadata locked in KL's head :D.
 
-texture.df <- read_SiteTextureData(dataDir=dataDir) %>%
-  mutate(`Sand (g)` = `Ashed Mass (g)`,
-         `Clay (g)` = `Hydro Reading` - `Blank Reading`,
-         `Total (by oven) (g)` = `Mass Dried (g)` - 
-           (`Wet Sieved + Oven dry mass (g)` - `Ashed Mass (g)`) ) %>%
-  mutate(`Silt (g)` = `Total (by oven) (g)` - `Clay (g)` - `Sand (g)`) %>%
-  mutate(core = if_else(grepl('[RLC]$', sheet_name),
-                        substr(sheet_name, 1, nchar(sheet_name)-1),
-                        sheet_name),
-         ID_sample = if_else(grepl('[RLC]$', sheet_name),
-                        substr(sheet_name, nchar(sheet_name), nchar(sheet_name)),
-                        '')) %>%
-  mutate(core = recode(core, 'Dry1'='DRY1',  'OFF1' = 'Off1', 'OFF2'='Off2',
-                       'DHI'='DH1', 'WHI'='WH1', 'SRB'='SRB1', 'LWS'='LWS1')) %>%
-  separate(`Depth (cm)`, into=c('Depth top (cm)', 'ID_Depth_cm'), sep='-', remove=FALSE) %>%
-  mutate(`Depth (cm)`=paste0("'",`Depth (cm)`)) %>%
-  mutate(source_file = 'Site_textue (1).xlsx') %>%
-  select(source_file, sheet_name, core, `Depth (cm)`, ID_Depth_cm, ID_sample,
-         `Blank Reading`, `Hydro Reading`, `Temperature (C)`, 
-         `Mass Dried (g)`, `Wet Sieved + Oven dry mass (g)`, `Ashed Mass (g)`,
-         `Total (by oven) (g)`, `Sand (g)`, `Clay (g)`, `Silt (g)`)
-##'Site 3' is currently orphaned.... need to go back to field notebook
+4) What does BDL in the Patton_DOI_ReynoldsCreek data file mean?
 
-```
- 
-```{r writeNewWS}
+5) Check column names for RyanWill data?
+
+# Read and mash data
+
+## Reynolds Data
+```{r setReads, warning=FALSE}
+ReynoldReads <- read_ReynoldsData(dataDir=dataDir)
+
+site.df <- ReynoldReads$site
+pit.df <- ReynoldReads$pit
+mass.df <- ReynoldReads$mass
+inorganicC.df <- ReynoldReads$inorganicC
+
 write_excel_csv(site.df, file.path('..', 'temp', 'Reynolds_data', 'site.csv'))
 write_excel_csv(pit.df, file.path('..', 'temp', 'Reynolds_data', 'pit.csv'))
 write_excel_csv(mass.df, file.path('..', 'temp', 'Reynolds_data', 'mass.csv'))
 write_excel_csv(inorganicC.df, file.path('..', 'temp', 'Reynolds_data', 'inorganicC.csv'))
-
+```
+## Texture data
+```{r readTexture}
+texture.df <- read_SiteTextureData(dataDir=dataDir) 
 write_excel_csv(texture.df, file.path('..', 'temp', 'Site_texture', 'texture.csv'))
+```
+
+```{r readPatton}
+patton.ls <- read_PattonData(dataDir=dataDir)
+meta_patton.df <- patton.ls$meta
+site_patton.df <- patton.ls$site
+pit_patton.df <- patton.ls$soilSamples
+
+write_excel_csv(meta_patton.df, file.path('..', 'temp', 'Patton_data', 'meta.csv'))
+write_excel_csv(site_patton.df, file.path('..', 'temp', 'Patton_data', 'site.csv'))
+write_excel_csv(pit_patton.df, file.path('..', 'temp', 'Patton_data', 'pit.csv'))
+```
+
+```{r readRyan}
+ryan.ls <- read_RyanData(dataDir=dataDir)
+write_excel_csv(ryan.ls$meta, file.path('..', 'temp', 'Ryan_data', 'meta.csv'))
+write_excel_csv(ryan.ls$samples, file.path('..', 'temp', 'Ryan_data', 'samples.csv'))
+
+
+temp_ryan <- ryan.ls$samples %>% 
+  unite(col=sample, S, ID) %>%
+  unite(col=core, N, E, remove=FALSE) %>%
+  mutate(`depth interval` = gsub('cm', '', `depth interval`)) %>%
+  separate(`depth interval`, into=c('Layer top (cm)', 'Layer bottom (cm)'), sep='-') %>%
+  mutate(sample = paste0('RyanWill-', sample),
+         core = paste0('RyanWill-', core),
+         `RTK?` = recode(`RTK?`, 'Y' = 'Real Time Kinematic (GPS)', 'N' = 'Other')) %>%
+  rename( 'GPS Method' = 'RTK?', 'Layer thickness (m)'=depth,
+          'Nitrogen (mass percent)'='N__1', 
+          'Organic carbon (mass percent)' = OC,
+          'Coarse fraction (precent)' = '%CF',
+          'Sand fraction (percent)' = '%sand',
+          'Silt fraction (percent)' = '%silt',
+          'Clay fraction (percent)' = '%clay', 
+          'Bulk density [fine] (kg m-3)' = 'BD_f',
+          'Bulk density [modeled] (kg m-3)' = 'BD_m',
+          'CaCO3 present (Y/N)' = 'CaCO3?',
+          'Coarse root (percent)' = 'c_root %',
+          'Fine root (percent)' = 'f_root %') %>%
+  select(-`t_root%`)
+
+```
+
+```{r}
+##'Site 3' is currently orphaned.... need to go back to field notebook
+print(paste('Cores that do not match, [Site 3] is a known orphen:', setdiff(texture.df$core, site.df$core)))
+```
+ 
+## Harmonized data
+```{r writeNewWS}
+allSite.df <- site.df %>%
+  select(-bulk_density) %>% #remove the blanket bulk density
+  mutate_at(c('E', 'N', 'Elevation_m', 'Slope_degrees', 'Aspect_degrees'), as.numeric) %>%
+  bind_rows(temp_ryan %>% select(core, N, E, `GPS Method`)) %>%
+  rename('Collection Date'='sample_date', "Easting (m)"='E', "Northing (m)" ='N',
+         "Elevation (m)"='Elevation_m', "Aspect (degrees)" ="Aspect_degrees",
+         "Slope (degrees)" = "Slope_degrees") %>%
+  mutate('Collection Date' = format(`Collection Date`, '%Y-%m-%d')) %>%
+  bind_rows(patton.ls$site %>%
+              rename("GPS Method"="Collection Method")%>%
+              mutate('Collection Date' = format(`Collection Date`, '%Y-%m-%d'),
+                     core=`Soil Pit IGSN`)) %>%
+  unique()
+
+write_excel_csv(allSite.df, path=file.path('..', 'temp', 'AllSites.csv'))
+
+temp_pit <- ReynoldReads$pit %>%
+  mutate(Depth_cm = gsub("^'", "", Depth_cm)) %>%
+  mutate(Notes = if_else(grepl('^[[:alpha:]]', Depth_cm) | grepl('cm: ', Depth_cm),
+                         paste(Notes, Depth_cm), Notes)) %>%
+  #mutate(Depth_old = Depth_cm) %>%
+  mutate(Depth_cm = regmatches(Depth_cm, gregexpr('\\d+ ?- ?\\d+', Depth_cm))) %>%
+  separate(Depth_cm, into=c('Layer top (cm)', 'Layer bottom (cm)'), sep='-', remove = !FALSE) %>%
+  mutate_at(c('Layer top (cm)', 'Layer bottom (cm)'), as.numeric) %>%
+  filter(is.finite(`Layer top (cm)`)) %>%
+  dplyr::rename(`Gravel-pit (percent)` = Gravel_percent )
+
+temp_mass <-mass.df %>%
+  rename('Layer bottom (cm)' = ID_Depth_cm) %>%
+  mutate_at(c('Layer bottom (cm)', 'Fine_mass_g', 'Gravel_mass_g'), as.numeric) %>%
+  mutate('Fine fraction (fraction)' = Fine_mass_g / (Fine_mass_g+Gravel_mass_g),
+         'Gravel fraction (fraction)' = Gravel_mass_g/ (Fine_mass_g+Gravel_mass_g)) %>%
+  select(core, ID_sample, `Layer bottom (cm)`, `Fine fraction (fraction)`, `Gravel fraction (fraction)`)
+
+temp_texture <- texture.df %>%
+  mutate('Sand (fraction)' = `Sand (g)`/`Total (by oven) (g)`,
+         'Silt (fraction)' = `Silt (g)`/`Total (by oven) (g)`,
+         'Clay (fraction)' = `Clay (g)`/`Total (by oven) (g)`) %>%
+  mutate(`Depth (cm)` = gsub("^'", "", `Depth (cm)`)) %>%
+  separate(`Depth (cm)`, into=c('Layer top (cm)', 'Layer bottom (cm)'), sep='-') %>%
+  select(core, ID_sample, starts_with('Layer'), ends_with('(fraction)')) %>%
+  mutate_at(vars(starts_with('Layer'), ends_with('(fraction)')), as.numeric)
+
+temp_ic <- inorganicC.df %>%
+  mutate(IC_percent = as.numeric(IC_percent),
+         'Layer bottom (cm)' = as.numeric(ID_Depth_cm)) %>%
+  mutate(ID_fraction = if_else(grepl('G', ID_fraction), 
+                               'Inorganic carbon: gravel (percent)', 'Inorganic carbon: fine (percent)')) %>%
+  spread(key=ID_fraction, value=IC_percent) %>%
+  select(core, ID_sample, `Layer bottom (cm)`, ends_with('(percent)'))
+
+#sample.df <- full_join(temp_pit, temp_texture, by= c("core", "Layer top (cm)", "Layer bottom (cm)")) %>%
+#  full_join(temp_mass, by=c('core', "ID_sample", 'Layer bottom (cm)')) %>%
+#  full_join(temp_ic, by=c('core', "ID_sample", 'Layer bottom (cm)')) %>%
+  #add in temp_ryan and patton.ls
+```
+
+# Cluster sites
+
+```{r cluster}
+
+latLon.df <- allSite.df %>% select(`Easting (m)`, `Northing (m)`) %>% unique %>%
+  filter(is.finite(`Easting (m)` + `Northing (m)`)) %>% 
+  rename(Easting = `Easting (m)`, Northing = `Northing (m)`)
+
+knownSites <-  allSite.df %>% select(site_name, `Easting (m)`, `Northing (m)`) %>%
+  filter(is.finite(`Easting (m)` + `Northing (m)`), !is.na(site_name)) %>% unique %>% 
+  rename(site_Easting = `Easting (m)`, site_Northing = `Northing (m)`)
+
+temp <- plyr::ddply(knownSites, c('site_name', 'site_Easting', 'site_Northing'), function(xx){
+  ans <- latLon.df %>%
+    mutate(distance = sqrt((`Easting` - xx$site_Easting)^2 + (`Northing`-xx$site_Northing)^2)) %>%
+    filter(distance < 30)
+  return(ans)
+})
+
+clusterLatLon <- latLon.df %>% full_join(temp, by = c("Easting", "Northing"))
+
+ggplot(clusterLatLon) +
+  geom_point(aes(x=Easting, y=Northing, color=is.na(site_name)))
 ```
 
 # QA/QC
  
 ## Site.df
+```{r}
+
+##List the layers ####
+rgdal::ogrListLayers('~/Documents/Professional/Datasets/Renyolds-CZO/GIS_dataproducts/access_roads.kml')
+rgdal::ogrListLayers('~/Documents/Professional/Datasets/Renyolds-CZO/GIS_dataproducts/hydrology.kml')
+rgdal::ogrListLayers('~/Documents/Professional/Datasets/Renyolds-CZO/GIS_dataproducts/boundary.kml')
+#rgdal::ogrListLayers('~/Documents/Professional/Datasets/Renyolds-CZO/GIS_dataproducts/NED_10m/ned_10m/')
+
+##Read in layers ####
+roads.sp <- rgdal::readOGR('~/Documents/Professional/Datasets/Renyolds-CZO/GIS_dataproducts/access_roads.kml',
+                           layer='RCEW.DBO.RCEW_DBO_RC_Roads')
+hydro.sp <- rgdal::readOGR('~/Documents/Professional/Datasets/Renyolds-CZO/GIS_dataproducts/hydrology.kml',
+                           layer='Hydrology')
+boundry.sp <- rgdal::readOGR('~/Documents/Professional/Datasets/Renyolds-CZO/GIS_dataproducts/boundary.kml',
+                             layer='RCEW_Boundary')
+
+ggplot(data=fortify(boundry.sp)) +
+  geom_polygon(aes(x=long, y=lat, group=group), color='grey', fill=NA) +
+  geom_path(data=fortify(hydro.sp), aes(x=long, y=lat, group=group, order=order), color='blue') +
+  geom_path(data=fortify(roads.sp), aes(x=long, y=lat, group=group, order=order), color='black') 
+```
 ```{r}
 site.df <- site.df %>% 
   mutate_at(vars(c(E, N, Elevation_m, Slope_degrees, Aspect_degrees)), as.numeric)
@@ -84,11 +226,11 @@ ggplot(site.df) +
   theme_bw()
 ggplot(site.df) +
   #geom_point(aes(x=E, y=N), color='yellow') +
-  geom_point(aes(x=E, y=N, color=core %in% inorgnicC.df$core)) +
+  geom_point(aes(x=E, y=N, color=core %in% inorganicC.df$core)) +
   theme_bw()
 
 
-soil.df <- inorgnicC.df %>%
+soil.df <- inorganicC.df %>%
   mutate(ID_fraction = if_else(ID_fraction %in% c('G', 'GRAVEL'),
                                'Gravel_IC_percent', 'Fine_IC_percent')) %>%
   spread(key=ID_fraction, value=IC_percent) %>%
